@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" ></script>
+    <title>Namaz Vaxti</title>
+</head>
+<body>
+
+    <div id="first">
+        <input type="text" id="country" placeholder="country" required> <input type="text" id="city" placeholder="city" required>
+        <button onclick="today(this)">Today Prayer Time</button><button onclick="alarm(this)">Alarm</button>
+        <hr>
+        <input type="text" id="country1" placeholder="country" required> 
+        <input type="text" id="city1" placeholder="city" required>
+        <input type="month" id="date1" required>
+        <button onclick="monthPrayer(this)">Month Prayer Time</button>
+    
+    </div>
+
+    <script>
+
+        function monthPrayer(e){
+            let country = document.getElementById("country1").value;
+            let city = document.getElementById("city1").value;
+            let date = document.getElementById("date1").value;
+            let year = moment(date , "YYYY-MM").format("Y")
+            let month = moment(date , "YYYY-MM").format("MM")
+
+            getPrayerTimeDate(city, country,year,month)
+
+        }
+
+        function alarm(e){
+            let country = document.getElementById("country").value;
+            let city = document.getElementById("city").value;
+            alarmTrayer(city, country);
+        }
+
+        function today(e){
+            let country = document.getElementById("country").value;
+            let city = document.getElementById("city").value;
+            getPrayerTime(city, country)
+        }
+        
+        function getPrayerTime(city, country){
+            let API = `https://api.aladhan.com/v1/calendarByCity?city=${city}&country=${country}`;
+            let respons = [];
+            fetch(API)
+            .then(res => res.json())
+            .then(re => {
+                let data = re.data;
+                let today = moment().format("DD-MM-YYYY")
+
+                let todayData = data.find(e => e.date.gregorian.date == today).timings;
+                todayData = Object.values(todayData);
+                
+                todayData.forEach(e => {
+                    let time = toString( moment(e,"HH:mm").format("HH:mm"));
+                    console.log(time);
+                });
+
+            })
+        }
+
+        function alarmTrayer(city, country){
+            let API = `https://api.aladhan.com/v1/calendarByCity?city=${city}&country=${country}`;
+            let respons = [];
+            fetch(API)
+            .then(res => res.json())
+            .then(re => {
+                let data = re.data;
+
+                let today = moment().format("DD-MM-YYYY")
+
+                let todayData = data.find(e => e.date.gregorian.date == today).timings;
+                todayData = Object.values(todayData);
+
+                let interval =  setInterval(() =>{
+                    
+                    todayData.forEach(e => {
+                        let minute = moment.duration(moment().diff(moment(e,'HH:mm'))).asMinutes();s
+
+                        if(minute < 0 && minute > -15){
+                            console.log(`Namaz vaxtina ${minute.toFixed(1)} deqiqe qaldi!!`);
+                            clearInterval(interval);
+                        }
+                    });
+                },1000)
+
+            })
+        }
+
+        function getPrayerTimeDate(city, country,year,month){
+            let API = `https://api.aladhan.com/v1/calendarByCity?city=${city}&country=${country}&month=${month}&year=${year}`;
+            let respons = [];
+            return fetch(API)
+            .then(res => res.json())
+            .then(res => console.log(res))
+        }
+        function getToDay(d){
+            let today = moment().format("DD-MM-YYYY");
+            let toDayData = d.find(x => x.date.gregorian.date == today)
+            console.log(toDayData);
+            return toDayData.timings
+        }
+        // getPrayerTime("Baku","Azerbaijan").then(r=> console.log(r))
+
+    </script>
+</body>
+</html>
